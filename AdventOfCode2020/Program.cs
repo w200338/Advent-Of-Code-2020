@@ -7,6 +7,7 @@ namespace AdventOfCode2020
 	{
 		static async Task Main(string[] args)
 		{
+			/*
 			Day[] days = new Day[25];
 			for (int i = 1; i <= 25; i++)
 			{
@@ -14,19 +15,23 @@ namespace AdventOfCode2020
 				Type type = Type.GetType($"AdventOfCode2020.Days.{dayName}.{dayName}");
 				days[i - 1] = (Day) Activator.CreateInstance(type);
 			}
-
-			Day currentDay;
+			*/
+			int day = 0;
 
 			// auto select day in december 2020
-			if (DateTime.Now.Year == 2020 && DateTime.Now.Month == 12)
+			if (DateTime.Now.Year == 2020 && DateTime.Now.Month == 12 && DateTime.Now.Day <= 25)
 			{
-				currentDay = days[DateTime.Now.Day];
+				day = DateTime.Now.Day;
 			}
 			else
 			{
 				Console.WriteLine("Select a day");
-				currentDay = days[int.Parse(Console.ReadLine())];
+				day = int.Parse(Console.ReadLine());
 			}
+
+			string dayName = $"Day{(day < 10 ? "0" + day : day.ToString())}";
+			Type type = Type.GetType($"AdventOfCode2020.Days.{dayName}.{dayName}");
+			Day currentDay = (Day)Activator.CreateInstance(type);
 
 			// execute day
 			await currentDay.ReadInput();
