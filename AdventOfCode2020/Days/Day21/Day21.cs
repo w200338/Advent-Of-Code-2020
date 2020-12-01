@@ -5,13 +5,13 @@
 		/// <inheritdoc />
 		public override string Part1()
 		{
-			throw new System.NotImplementedException();
+			return "not implemented";
 		}
 
 		/// <inheritdoc />
 		public override string Part2()
 		{
-			throw new System.NotImplementedException();
+			return "not implemented";
 		}
 	}
 }
