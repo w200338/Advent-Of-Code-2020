@@ -33,6 +33,8 @@ namespace AdventOfCode2020
 			Console.WriteLine(currentDay.Part1());
 			Console.WriteLine($"took {stopwatch.Elapsed.TotalMilliseconds} ms");
 
+			Console.WriteLine();
+
 			stopwatch = Stopwatch.StartNew();
 			Console.WriteLine("Part 2");
 			Console.WriteLine(currentDay.Part2());
