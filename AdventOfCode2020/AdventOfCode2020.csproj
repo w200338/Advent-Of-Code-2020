@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AdventOfCode2020.Tools\AdventOfCode2020.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Days\Day01\input.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
