@@ -102,15 +102,16 @@ namespace AdventOfCode2020.Days.Day14
 		public override string Part2()
 		{
 			string[] lines = Input.Split("\r\n");
-
 			List<MaskBit> maskBits = new List<MaskBit>();
-			Dictionary<int, long> memory = new Dictionary<int, long>();
+			Dictionary<long, long> memory = new Dictionary<long, long>();
 
 			foreach (string line in lines)
 			{
 				// new mask
 				if (line.Substring(0, 4) == "mask")
 				{
+					maskBits = new List<MaskBit>();
+
 					string mask = line.Split(" = ")[1];
 					foreach (char c in mask)
 					{
@@ -147,40 +148,35 @@ namespace AdventOfCode2020.Days.Day14
 					long givenValue = long.Parse(line.Split(" = ")[1]);
 
 					// find all memory addresses
-					List<MaskBit> memoryBits = new List<MaskBit>();
-					for (int i = 35; i >= 0; i--)
+					List<MaskBitStruct> memoryBits = new List<MaskBitStruct>();
+					for (int i = maskBits.Count - 1; i >= 0; i--)
 					{
 						switch (maskBits[i].Value)
 						{
 							case MaskBitValue.None:
-								memoryBits.Add(new MaskBit()
-								{
-									Value = MaskBitValue.None
-								});
+								memoryBits.Add(new MaskBitStruct(MaskBitValue.None));
 
 								break;
 							case MaskBitValue.Zero:
-								memoryBits.Add(new MaskBit()
-								{
-									Value = ((index & (0b1 << i)) >> i) == 1 ? MaskBitValue.One : MaskBitValue.Zero
-								});
+								memoryBits.Add(new MaskBitStruct(((index & ((long)0b1 << i)) >> i) == 1 ? MaskBitValue.One : MaskBitValue.Zero));
 
 								// add nothing
 								break;
 							case MaskBitValue.One:
-								memoryBits.Add(new MaskBit()
-								{
-									Value = MaskBitValue.One
-								});
+								memoryBits.Add(new MaskBitStruct(MaskBitValue.One));
 								break;
 							default:
 								throw new ArgumentOutOfRangeException();
 						}
 					}
 
-					foreach (List<MaskBit> bits in CreatePermutations(memoryBits))
+					//long totalExpectedAddresses = 1 << memoryBits.Count(memoryBits => memoryBits.Value == MaskBitValue.None);
+
+					//HashSet<long> visitedAddresses = new HashSet<long>();
+					foreach (List<MaskBitStruct> bits in CreatePermutations(memoryBits))
 					{
-						int currentIndex = MaskToInt(bits);
+						long currentIndex = MaskToInt(bits);
+						//visitedAddresses.Add(currentIndex);
 
 						if (memory.ContainsKey(currentIndex))
 						{
@@ -190,13 +186,20 @@ namespace AdventOfCode2020.Days.Day14
 						{
 							memory.Add(currentIndex, givenValue);
 						}
+
+						/*
+						if (visitedAddresses.Count == totalExpectedAddresses)
+						{
+							break;
+						}
+						*/
 					}
 				}
 			}
 
 			// count total
 			BigInteger total = 0;
-			foreach (KeyValuePair<int, long> kv in memory)
+			foreach (KeyValuePair<long, long> kv in memory)
 			{
 				total += kv.Value;
 			}
@@ -215,6 +218,21 @@ namespace AdventOfCode2020.Days.Day14
 			}
 		}
 
+		public struct MaskBitStruct
+		{
+			public MaskBitValue Value { get; set; }
+
+			public MaskBitStruct(MaskBitValue maskBitValue)
+			{
+				Value = maskBitValue;
+			}
+
+			public override string ToString()
+			{
+				return Value.ToString();
+			}
+		}
+
 		public enum MaskBitValue : byte
 		{
 			None,
@@ -222,10 +240,10 @@ namespace AdventOfCode2020.Days.Day14
 			One
 		}
 
-		public int MaskToInt(List<MaskBit> maskBits)
+		public long MaskToInt(List<MaskBitStruct> maskBits)
 		{
 			long output = 0;
-			maskBits.Reverse();
+			//maskBits.Reverse();
 
 			for (int i = 0; i < maskBits.Count; i++)
 			{
@@ -235,33 +253,42 @@ namespace AdventOfCode2020.Days.Day14
 
 			output >>= 1;
 
-			return (int)output;
+			return output;
 		}
 
-		public List<List<MaskBit>> CreatePermutations(List<MaskBit> maskBits)
+		public IEnumerable<List<MaskBitStruct>> CreatePermutations(List<MaskBitStruct> maskBits)
 		{
-			List<List<MaskBit>> output = new List<List<MaskBit>>();
+			if (maskBits.All(m => m.Value != MaskBitValue.None))
+			{
+				yield return maskBits;
+				yield break;
+				//output.Add(maskBits);
+			}
 
 			for (int i = maskBits.Count - 1; i >= 0; i--)
 			{
 				if (maskBits[i].Value == MaskBitValue.None)
 				{
-					List<MaskBit> copyOfMask1 = maskBits.Select(m => new MaskBit() { Value = m.Value }).ToList();
-					List<MaskBit> copyOfMask2 = maskBits.Select(m => new MaskBit() { Value = m.Value }).ToList();
-					copyOfMask1[i].Value = MaskBitValue.One;
-					copyOfMask2[i].Value = MaskBitValue.Zero;
+					List<MaskBitStruct> copyOfMask1 = maskBits.Select(m => new MaskBitStruct(m.Value)).ToList();
+					List<MaskBitStruct> copyOfMask2 = maskBits.Select(m => new MaskBitStruct(m.Value)).ToList();
+					copyOfMask1[i] = new MaskBitStruct(MaskBitValue.Zero);
+					copyOfMask2[i] = new MaskBitStruct(MaskBitValue.One);
 
-					output.AddRange(CreatePermutations(copyOfMask1));
-					output.AddRange(CreatePermutations(copyOfMask2));
+					foreach (List<MaskBitStruct> permutation in CreatePermutations(copyOfMask1))
+					{
+						yield return permutation;
+					}
+
+					foreach (List<MaskBitStruct> permutation in CreatePermutations(copyOfMask2))
+					{
+						yield return permutation;
+					}
+
+					yield break;
 				}
 			}
 
-			if (maskBits.All(m => m.Value != MaskBitValue.None))
-			{
-				output.Add(maskBits);
-			}
-
-			return output;
+			//return output;
 		}
 	}
 }
