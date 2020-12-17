@@ -90,22 +90,12 @@ namespace AdventOfCode2020.Tools.Mathematics.Vectors
 
 		public static bool operator ==(VectorNInt a, VectorNInt b)
 		{
-			if (a == null || b == null)
-			{
-				return false;
-			}
-
-			return a.Equals(b);
+			return a?.Equals(b) ?? false;
 		}
 
 		public static bool operator !=(VectorNInt a, VectorNInt b)
 		{
-			if (a == null || b == null)
-			{
-				return false;
-			}
-
-			return !a.Equals(b);
+			return !a?.Equals(b) ?? false;
 		}
 
 
@@ -118,13 +108,13 @@ namespace AdventOfCode2020.Tools.Mathematics.Vectors
 
 			for (int i = 0; i < Values.Length; i++)
 			{
-				if (Math.Abs(Values[i] - other[i]) > 0.001f)
+				if (Values[i] - other[i] != 0)
 				{
 					return false;
 				}
 			}
 
-			return false;
+			return true;
 		}
 
 		/// <inheritdoc />
