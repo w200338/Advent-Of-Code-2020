@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using AdventOfCode2020.Tools.Mathematics.Vectors;
 
 namespace AdventOfCode2020.Days.Day20
@@ -161,22 +162,110 @@ namespace AdventOfCode2020.Days.Day20
 			}
 			*/
 
-			List<List<Tile>> currentTiles = new List<List<Tile>>(width);
-			for (int i = 0; i < width; i++)
+			Console.WriteLine("\n\nLooking for sea monster:");
+			Console.WriteLine("                  # \n#    ##    ##    ###\n #  #  #  #  #  #   \n");
+			string[] monsterLines = "                  # \n#    ##    ##    ###\n #  #  #  #  #  #   ".Split('\n');
+
+			Regex seasMonsterRegex = new Regex(@"[#\.]{18}#[#\.][^\n]*\n[^\n]*#([#\.]{4}##){3}#[^\n]*\n[^\n]*[#\.](#[#\.]{2}){5}#[#\.]{3}", RegexOptions.Multiline);
+
+			foreach (Tile cornerTile in cornerTiles)
 			{
-				currentTiles.Add(new List<Tile>());
-				for (int j = 0; j < width; j++)
+				foreach (object _ in Permute(cornerTile))
 				{
-					currentTiles[i].Add(null);
+					// create accurate grid of tiles
+					List<List<Tile>> currentTiles = new List<List<Tile>>(width);
+					for (int i = 0; i < width; i++)
+					{
+						currentTiles.Add(new List<Tile>());
+						for (int j = 0; j < width; j++)
+						{
+							currentTiles[i].Add(null);
+						}
+					}
+
+					currentTiles[0][0] = cornerTile;
+
+					if (Solve(currentTiles, Vector2Int.Zero))
+					{
+						Console.WriteLine("Solved grid placement");
+					}
+					else
+					{
+						continue;
+					}
+
+					for (int rotate = 0; rotate < 4; rotate++)
+					{
+						// combine all tiles into 1 big string
+						StringBuilder stringBuilder = new StringBuilder(width * 8 * width * 8 + width);
+						int dataLength = currentTiles[0][0].Data.Length;
+						for (int y = 0; y < currentTiles.Count; y++)
+						{
+							for (int row = 1; row < dataLength - 1; row++)
+							{
+								for (int x = 0; x < currentTiles.Count; x++)
+								{
+									stringBuilder.Append(currentTiles[y][x].Row(row).Substring(1, dataLength - 2));
+								}
+
+								stringBuilder.Append('\n');
+							}
+						}
+
+						string sea = stringBuilder.ToString();
+						string[] seaLines = sea.Split('\n');
+						//int monsters = seasMonsterRegex.Matches(sea).Count;
+						int monsters = 0;
+
+						for (int seaY = 0; seaY < seaLines.Length - monsterLines.Length; seaY++)
+						{
+							for (int seaX = 0; seaX < seaLines.Length - monsterLines[0].Length; seaX++)
+							{
+								if (IsMonsterPresent(monsterLines, seaLines, seaY, seaX))
+								{
+									monsters++;
+								}
+							}
+						}
+
+						if (monsters > 0)
+						{
+							//Console.WriteLine("Satellite image:");
+							//Console.WriteLine(sea);
+
+							Console.WriteLine($"\nFound {monsters} sea monsters");
+
+							int roughness = sea.Count(c => c == '#') - monsters * 15;
+							Console.WriteLine($"Water roughness: {roughness}\n");
+							// less than 2571
+							// less than 2406
+							// less than 2331
+							// not 2166
+						}
+					}
+				}
+				
+			}
+
+			
+
+			return output;
+		}
+
+		private static bool IsMonsterPresent(string[] monsterLines, string[] seaLines, int seaY, int seaX)
+		{
+			for (int monsterY = 0; monsterY < monsterLines.Length; monsterY++)
+			{
+				for (int monsterX = 0; monsterX < monsterLines[0].Length; monsterX++)
+				{
+					if (monsterLines[monsterY][monsterX] == '#' && seaLines[seaY + monsterY][seaX + monsterX] != '#')
+					{
+						return false;
+					}
 				}
 			}
 
-			if (Solve(currentTiles, Vector2Int.Zero))
-			{
-				Console.WriteLine("Solved");
-			}
-
-			return output;
+			return true;
 		}
 
 		private bool Solve(List<List<Tile>> currentTiles, Vector2Int pos)
@@ -436,6 +525,17 @@ namespace AdventOfCode2020.Days.Day20
 				}
 			}
 
+			public string Row(int row)
+			{
+				StringBuilder stringBuilder = new StringBuilder(Data.Length);
+				for (int i = 0; i < Data.Length; i++)
+				{
+					stringBuilder.Append(this[row, i]);
+				}
+
+				return stringBuilder.ToString();
+			}
+
 			public string[] Data { get; set; }
 
 			public Tile()
@@ -461,16 +561,16 @@ namespace AdventOfCode2020.Days.Day20
 						x = y;
 						y = Data.Length - 1 - oldX;
 					}
-					
-					// flip
-					if (FlippedVertical)
-					{
-						x = Data.Length - x - 1;
-					}
 
+					// flip
 					if (FlippedHorizontal)
 					{
 						y = Data.Length - y - 1;
+					}
+
+					if (FlippedVertical)
+					{
+						x = Data.Length - x - 1;
 					}
 
 					return Data[y][x];

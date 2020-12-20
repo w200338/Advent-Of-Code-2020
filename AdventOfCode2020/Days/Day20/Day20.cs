@@ -90,10 +90,10 @@ namespace AdventOfCode2020.Days.Day20
 			// 'click' one corner into place
 			//HashSet<int> topLeftCornerIds = CalcTopLeftCorner(tiles);
 			//HashSet<int> topRightCornerIds = CalcTopRightCorner(tiles);
-			Tile topLeftCorner = cornerTiles.First(tile => tile.Id == 1951);
-			Tile topRightCorner = cornerTiles.First(tile => tile.Id == 3079); //TODO remove hardcoded
+			//Tile topLeftCorner = cornerTiles.First(tile => tile.Id == 1951);
+			//Tile topRightCorner = cornerTiles.First(tile => tile.Id == 3079); //TODO remove hardcoded
 
-			GridMaker gridMaker = new GridMaker(tiles, topLeftCorner, topRightCorner);
+			GridMaker gridMaker = new GridMaker(tiles, null, null);
 			gridMaker.MakeGrid();
 
 			return "not implemented";
