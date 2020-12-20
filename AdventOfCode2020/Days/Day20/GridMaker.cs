@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using AdventOfCode2020.Tools.Mathematics.Vectors;
 
 namespace AdventOfCode2020.Days.Day20
@@ -181,7 +182,7 @@ namespace AdventOfCode2020.Days.Day20
 		private bool Solve(List<List<Tile>> currentTiles, Vector2Int pos)
 		{
 			// solved, first tile outside of range
-			if (pos.Y == currentTiles.Count && pos.X == currentTiles.Count - 1)
+			if (pos.X == currentTiles.Count && pos.Y == currentTiles.Count - 1)
 			{
 				return true;
 			}
@@ -379,16 +380,63 @@ namespace AdventOfCode2020.Days.Day20
 
 			public int Id { get; }
 
-			public string OriginalTop { get; }
-			public string OriginalBottom { get; }
-			public string OriginalLeft { get; }
-			public string OriginalRight { get; }
+			public string Top
+			{
+				get
+				{
+					StringBuilder stringBuilder = new StringBuilder(Data.Length);
+					for (int i = 0; i < Data.Length; i++)
+					{
+						stringBuilder.Append(this[0, i]);
+					}
 
+					return stringBuilder.ToString();
+				}
+			}
 
-			public string Top { get; set; }
-			public string Bottom { get; set; }
-			public string Left { get; set; }
-			public string Right { get; set; }
+			public string Bottom
+			{
+				get
+				{
+					StringBuilder stringBuilder = new StringBuilder(Data.Length);
+					for (int i = 0; i < Data.Length; i++)
+					{
+						stringBuilder.Append(this[Data.Length - 1, i]);
+					}
+
+					return stringBuilder.ToString();
+				}
+			}
+
+			public string Left
+			{
+				get
+				{
+					StringBuilder stringBuilder = new StringBuilder(Data.Length);
+					for (int i = 0; i < Data.Length; i++)
+					{
+						stringBuilder.Append(this[i, 0]);
+					}
+
+					return stringBuilder.ToString();
+				}
+			}
+
+			public string Right
+			{
+				get
+				{
+					StringBuilder stringBuilder = new StringBuilder(Data.Length);
+					for (int i = 0; i < Data.Length; i++)
+					{
+						stringBuilder.Append(this[i, Data.Length - 1]);
+					}
+
+					return stringBuilder.ToString();
+				}
+			}
+
+			public string[] Data { get; set; }
 
 			public Tile()
 			{
@@ -399,17 +447,34 @@ namespace AdventOfCode2020.Days.Day20
 			{
 				Id = tile.Id;
 
-				OriginalTop = tile.TopString;
-				Top = tile.TopString;
-				
-				OriginalBottom = tile.BottomString;
-				Bottom = tile.BottomString;
+				Data = tile.TileData.Split("\r\n");
+			}
 
-				OriginalLeft = tile.LeftString;
-				Left = tile.LeftString;
+			public char this[int x, int y]
+			{
+				get
+				{
+					// rotate
+					for (int i = 0; i < Rotation; i++)
+					{
+						int oldX = x;
+						x = y;
+						y = Data.Length - 1 - oldX;
+					}
+					
+					// flip
+					if (FlippedVertical)
+					{
+						x = Data.Length - x - 1;
+					}
 
-				OriginalRight = tile.RightString;
-				Right = tile.RightString;
+					if (FlippedHorizontal)
+					{
+						y = Data.Length - y - 1;
+					}
+
+					return Data[y][x];
+				}
 			}
 
 			public State State
@@ -444,11 +509,6 @@ namespace AdventOfCode2020.Days.Day20
 			}
 			public void Reset()
 			{
-				Top = OriginalTop;
-				Bottom = OriginalBottom;
-				Left = OriginalLeft;
-				Right = OriginalRight;
-
 				Rotation = 0;
 				FlippedHorizontal = false;
 				FlippedVertical = false;
@@ -456,37 +516,16 @@ namespace AdventOfCode2020.Days.Day20
 
 			public void RotateRight()
 			{
-				string temp = Top;
-
-				Top = Left;
-				Left = Bottom;
-				Bottom = Right;
-				Right = temp;
-
 				Rotation = ++Rotation % 4;
 			}
 
 			public void FlipHorizontalAxis()
 			{
-				string temp = Top;
-				Top = Bottom;
-				Bottom = temp;
-
-				Right = new string(Right.Reverse().ToArray());
-				Left = new string(Left.Reverse().ToArray());
-
 				FlippedHorizontal = !FlippedHorizontal;
 			}
 
 			public void FlipVerticalAxis()
 			{
-				string temp = Right;
-				Right = Left;
-				Left = temp;
-
-				Top = new string(Top.Reverse().ToArray());
-				Bottom = new string(Bottom.Reverse().ToArray());
-
 				FlippedVertical = !FlippedVertical;
 			}
 
