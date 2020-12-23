@@ -57,56 +57,57 @@ namespace AdventOfCode2020.Days.Day23
 		/// <inheritdoc />
 		public override string Part2()
 		{
-			List<int> cups = Input.Select(c => int.Parse(c.ToString())).ToList();
+			LinkedList<int> cups = new LinkedList<int>(Input.Select(c => int.Parse(c.ToString())));
 			while (cups.Count < 1000000)
 			{
-				cups.Add(cups.Count + 1);
+				cups.AddLast(cups.Count + 1);
 			}
 
-			int cupCount = cups.Count;
+			LinkedListNode<int> currentNode = cups.First;
 
-			int currentIndex = 0;
+			Dictionary<int, LinkedListNode<int>> lookUp = new Dictionary<int, LinkedListNode<int>>();
+			while (currentNode != null)
+			{
+				lookUp.Add(currentNode.Value, currentNode);
+				currentNode = currentNode.Next;
+			}
+
+			currentNode = cups.First;
+
 			for (int i = 0; i < 10_000_000; i++)
 			{
-				int current = cups[currentIndex];
-				int destination = Modulo(current - 1, cupCount);
+				List<LinkedListNode<int>> pickUp = new List<LinkedListNode<int>>();
+				pickUp.Add(currentNode.Next ?? cups.First);
+				pickUp.Add(pickUp[0].Next);
+				pickUp.Add(pickUp[1].Next);
 
-				List<int> pickUp = new List<int>();
-				for (int j = 0; j < 3; j++)
+				LinkedListNode<int> destination = lookUp[(currentNode.Value - 1 + cups.Count) % cups.Count + 1];
+
+				while (pickUp.Contains(destination))
 				{
-					pickUp.Add(cups[(currentIndex + 1 + j) % cupCount]);
+					destination = lookUp[(destination.Value - 1 + cups.Count) % cups.Count + 1];
 				}
 
-				while (pickUp.Contains(destination) || destination == 0)
-				{
-					destination = (destination + cupCount) % (cupCount + 1);
-				}
+				cups.Remove(pickUp[0]);
+				cups.Remove(pickUp[1]);
+				cups.Remove(pickUp[2]);
+				cups.AddAfter(destination, pickUp[0]);
+				cups.AddAfter(pickUp[0], pickUp[1]);
+				cups.AddAfter(pickUp[1], pickUp[2]);
 
-				// remove selected cups and place them in their new place
-				for (int j = 0; j < 3; j++)
-				{
-					cups.Remove(pickUp[j]);
-				}
-				cups.InsertRange(cups.IndexOf(destination) + 1, pickUp);
-
-				// shift list around till current is back in its proper index
-				while (cups[currentIndex] != current)
-				{
-					int temp = cups[0];
-					cups.RemoveAt(0);
-					cups.Add(temp);
-				}
+				currentNode = currentNode.Next ?? cups.First;
 				
-				currentIndex++;
-				currentIndex %= cups.Count;
-
 				if (i % 10000 == 0)
 				{
 					Console.WriteLine($"{i}/10000000");
 				}
+
+				// make sure it's round
+				//cups.AddBefore(cups.First, cups.Last);
+				//cups.AddAfter(cups.Last, cups.First);
 			}
 
-			long output = cups[(cups.IndexOf(1) + 1) % cups.Count] * cups[(cups.IndexOf(1) + 2) % cups.Count];
+			long output = lookUp[1].Next.Value * lookUp[1].Next.Next.Value;
 
 			return output.ToString();
 		}
