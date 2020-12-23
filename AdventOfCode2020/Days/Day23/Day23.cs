@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace AdventOfCode2020.Days.Day23
@@ -26,8 +25,6 @@ namespace AdventOfCode2020.Days.Day23
 				while (pickUp.Contains(destination) || destination == 0)
 				{
 					destination = (destination + cups.Count) % (cups.Count + 1);
-
-					//Modulo(--destination, cups.Count);
 				}
 
 				cups.RemoveAll(item => pickUp.Contains(item));
@@ -57,36 +54,44 @@ namespace AdventOfCode2020.Days.Day23
 		/// <inheritdoc />
 		public override string Part2()
 		{
-			LinkedList<int> cups = new LinkedList<int>(Input.Select(c => int.Parse(c.ToString())));
-			while (cups.Count < 1000000)
+			List<int> cupValues = new List<int>(Input.Select(c => int.Parse(c.ToString())));
+			while (cupValues.Count < 1_000_000)
 			{
-				cups.AddLast(cups.Count + 1);
+				cupValues.Add(cupValues.Count + 1);
 			}
 
-			LinkedListNode<int> currentNode = cups.First;
+			CircularLinkedList<int> cups = new CircularLinkedList<int>(cupValues);
 
-			Dictionary<int, LinkedListNode<int>> lookUp = new Dictionary<int, LinkedListNode<int>>();
-			while (currentNode != null)
+			Dictionary<int, CircularLinkedListNode<int>> lookUp = new Dictionary<int, CircularLinkedListNode<int>>();
+			foreach (CircularLinkedListNode<int> node in cups.Nodes)
 			{
-				lookUp.Add(currentNode.Value, currentNode);
-				currentNode = currentNode.Next;
+				lookUp.Add(node.Value, node);
 			}
 
-			currentNode = cups.First;
-
+			CircularLinkedListNode<int> currentNode = cups.First;
 			for (int i = 0; i < 10_000_000; i++)
 			{
-				List<LinkedListNode<int>> pickUp = new List<LinkedListNode<int>>();
-				pickUp.Add(currentNode.Next ?? cups.First);
-				pickUp.Add(pickUp[0].Next);
-				pickUp.Add(pickUp[1].Next);
-
-				LinkedListNode<int> destination = lookUp[(currentNode.Value - 1 + cups.Count) % cups.Count + 1];
-
-				while (pickUp.Contains(destination))
+				List<CircularLinkedListNode<int>> pickUp = new List<CircularLinkedListNode<int>>
 				{
-					destination = lookUp[(destination.Value - 1 + cups.Count) % cups.Count + 1];
+					currentNode.Next,
+					currentNode.Next.Next,
+					currentNode.Next.Next.Next,
+				};
+
+				int destinationValue = currentNode.Value == 1 ? cups.Nodes.Count : currentNode.Value - 1;
+				
+				while (pickUp[0].Value == destinationValue ||
+				       pickUp[1].Value == destinationValue ||
+				       pickUp[2].Value == destinationValue)
+				{
+					destinationValue--;
+					if (destinationValue == 0)
+					{
+						destinationValue = cups.Nodes.Count;
+					}
 				}
+
+				CircularLinkedListNode<int> destination = lookUp[destinationValue];
 
 				cups.Remove(pickUp[0]);
 				cups.Remove(pickUp[1]);
@@ -95,19 +100,10 @@ namespace AdventOfCode2020.Days.Day23
 				cups.AddAfter(pickUp[0], pickUp[1]);
 				cups.AddAfter(pickUp[1], pickUp[2]);
 
-				currentNode = currentNode.Next ?? cups.First;
-				
-				if (i % 10000 == 0)
-				{
-					Console.WriteLine($"{i}/10000000");
-				}
-
-				// make sure it's round
-				//cups.AddBefore(cups.First, cups.Last);
-				//cups.AddAfter(cups.Last, cups.First);
+				currentNode = currentNode.Next;
 			}
 
-			long output = lookUp[1].Next.Value * lookUp[1].Next.Next.Value;
+			long output = (long)lookUp[1].Next.Value * lookUp[1].Next.Next.Value;
 
 			return output.ToString();
 		}
